@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Library Monitoring System</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f0f0f0;
+      margin: 0;
+      padding: 20px;
+    }
+    .main-container, .admin -panel {
+      background-color: #ffffff;
+      padding: 30px 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      max-width: 1000px;
+      margin: 20px auto;
+      overflow-x: auto;
+    }
+    .logo {
+      display: block;
+      margin: 0 auto 10px auto;
+      max-width: 100px;
+    }
+    h1, h2 {
+      text-align: center;
+    }
+    label {
+      font-weight: bold;
+      margin-top: 10px;
+      display: block;
+    }
+    input[type="text"], select {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      margin-bottom: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    .button-group {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .button-group button {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      background-color: #007bff;
+      color: white;
+      font-weight: bold;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .button-group button:hover {
+      background-color: #0056b3;
+    }
+    .admin-link {
+      text-align: center;
+      margin-top: 15px;
+    }
+    .admin-link a {
+      color: #007bff;
+      text-decoration: none;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: left;
+      white-space: nowrap;
+    }
+    th {
+      background-color: #eaeaea;
+    }
+    .remove-btn {
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="main-container" id="main">
+    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJYAAAAyCAYAAACtMPdkAAAACXBIWXMAAAsTAAALEwEAmpwYAAACGElEQVR4nO3ZwW7CQBCG4TfEJ8cEjqI+N3lAu4pVnYslcmYB1bpRpzY9jPkkGzqJ5rrn+NjIjfz9v4mO32pSBEEIIIYQQQgj+CcoGHgMxC6mTkBNwwxBBBAAAEEEEAAAQQQIPwHk1aY9YFfIYQQQgjqJ1McSlYMMUpoPhSyeuME9H04kOczgUEcI4Da0v3KpLGOdsrwb61qQx2dZj7esDPIbBDfWRjeDJH04YxXihM7sGpCKuLeS8bp7xM1AoxqngWTXHsi4Dch2+NSPYXEWcjlhHxOphF6NpZ4cGqYRdjcF8TVEpviZmGnpKHk3FyM/LcRM1fIKkS4rqXY+RHmDZHXEbGbkh5NnXRR5iD/Tb0V0/XOCekrlNdDHRl5b8TeZ3UjpFeVN4d+TZ49e7CMOUIMBIEvugfmxJcpg1DyjGpAVgxxSmg+FLJ6/MuW82fMg/bHiLF/2+BNq4UXz9qsczAAAAAElFTkSuQmCC" alt="Logo" class="logo" />
+    <h1>LIBRARY MONITORING SYSTEM</h1>
+
+    <label for="userType">USER TYPE</label>
+    <select id="userType" onchange="toggleUserFields()">
+      <option value="Student">Student</option>
+      <option value="Faculty">Faculty</option>
+    </select>
+
+    <div id="dynamicFields"></div>
+
+    <div class="button-group">
+      <button onclick="submitData('Time In')">TIME IN</button>
+      <button onclick="submitData('Time Out')">TIME OUT</button>
+    </div>
+
+    <p id="front-log-count" style="text-align:center; font-weight:bold; margin-top: 15px;"></p>
+    <div class="admin-link">
+      <a href="#" onclick="showAdminPanel()">ADMIN LOGIN</a>
+    </div>
+  </div>
+
+  <div class="admin-panel" id="admin-panel" style="display: none;">
+    <h2>Log Records</h2>
+    <p id="log-count" style="font-weight: bold;"></p>
+    <button onclick="exportCSV()">Export CSV</button>
+    <button onclick="clearLogs()">Clear All Logs</button>
+    <table>
+      <thead>
+        <tr>
+          <th>User Type</th>
+          <th>Date</th>
+          <th>Name</th>
+          <th>ID/Department</th>
+          <th>Program/Subject</th>
+          <th>Purpose/Resources</th>
+          <th>Time In</th>
+          <th>Time Out</th>
+          <th>Visit Count</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="log-body"></tbody>
+    </table>
+  </div>
+
+  <script>
+    const password = "TCClibrary 24";
+
+    const subjectOptions = `
+      <option>A. GENERAL WORKS</option>
+      <option>B. BJ PHILOSOPHY</option>
+      <option>D. HISTORY</option>
+      <option>E. U.S HISTORY</option>
+      <option>F. HISTORY OF THE AMERICAS</option>
+      <option>G. GEOGRAPHY</option>
+      <option>H. SOCIAL SCIENCE</option>
+      <option>J. POLITICAL SCIENCE</option>
+      <option>K. LAW</option>
+      <option>L. EDUCATION</option>
+      <option>M. MUSIC</option>
+      <option>N. FINE ARTS</option>
+      <option>P. LANGUAGE AND LITERATURE</option>
+      <option>Q. SCIENCE</option>
+      <option>R. MEDICINE</option>
+      <option>T. TECHNOLOGY</option>
+      <option>U-V. MILITARY SCIENCE AND NAVAL SCIENCE</option>
+      <option>Z. BIBLIOGRAPHY.PUBLISHING.LIBRARY SCIENCE</option>
+    `;
+
+    function toggleUserFields() {
+      const type = document.getElementById("userType").value;
+      const container = document.getElementById("dynamicFields");
+      container.innerHTML = "";
+
+      if (type === "Student") {
+        container.innerHTML = `
+          <label for="idNumber">TCC ID NUMBER</label>
+          <input type="text" id="idNumber" placeholder="0034-2024" maxlength="9" oninput="formatIDNumber()">
+          <label for="name">FULL NAME</label>
+          <input type="text" id="name" placeholder="Juan Dela Cruz">
+          <label for="program">YEAR & SECTION</label>
+          <input type="text" id="program" placeholder="e.g. BSCPE-1A" oninput="formatProgram()">
+          <label for="purpose">PURPOSE</label>
+          <input type="text" id="purpose" placeholder="Study, Research, etc.">
+        `;
+      } else {
+        container.innerHTML = `
+          <label for="name">FULL NAME</label>
+          <input type="text" id="name" placeholder="Prof. Maria Cruz">
+          <label for="idNumber">DEPARTMENT</label>
+          <input type="text" id="idNumber" placeholder="e.g. English Department">
+          <label for="program">SUBJECT CONCERN</label>
+          <select id="program">${subjectOptions}</select>
+          <label for="purpose">RESOURCES NEEDED</label>
+          <input type="text" id="purpose" placeholder="Books, Multimedia, etc.">
+        `;
+      }
+    }
+
+    function formatIDNumber() {
+      const input = document.getElementById("idNumber");
+      input.value = input.value.replace(/[^0-9-]/g, "").toUpperCase();
+    }
+
+    function formatProgram() {
+      const input = document.getElementById("program");
+      input.value = input.value.toUpperCase();
+    }
+
+    function capitalizeWords(str) {
+      return str.replace(/\b\w/g, c => c.toUpperCase());
+    }
+
+    function getTodayVisitCount(logs, date, name) {
+      return logs.filter(log => log.date === date && log.name === name).length;
+    }
+
+    function submitData(status) {
+      const userType = document.getElementById("userType").value;
+      const name = document.getElementById("name").value.trim();
+      const id = document.getElementById("idNumber").value.trim();
+      const program = document.getElementById("program").value.trim();
+      const purpose = document.getElementById("purpose").value.trim();
+      const now = new Date();
+      const date = now.toLocaleDateString();
+      const time = now.toLocaleTimeString();
+
+      if (!name || !id || !program || !purpose) {
+        alert("Please fill in all fields.");
+        return;
+      }
+
+      if (userType === "Student" && !/^\d{4}-20\d{2}$/.test(id)) {
+        alert("Student ID format must be: 00XX-202X");
+        return;
+      }
+
+      let logs = JSON.parse(localStorage.getItem("logs") || "[]");
+
+      if (logs.length >= 1000) {
+        alert("⚠️ Log limit reached. Please export and clear logs.");
+        return;
+      }
+
+      if (status === "Time In") {
+        logs.push({
+          userType,
+          date,
+          name,
+          id,
+          program,
+          purpose,
+          timeIn: time,
+          timeOut: "",
+          count: getTodayVisitCount(logs, date, name) + 1
+        });
+      } else {
+        const lastLog = [...logs].reverse().find(log =>
+          log.date === date && log.name === name && !log.timeOut
+        );
+        if (lastLog) {
+          lastLog.timeOut = time;
+        } else {
+          alert("No matching Time In found for today.");
+          return;
+        }
+      }
+
+      localStorage.setItem("logs", JSON.stringify(logs));
+      alert(`${status} recorded for ${name}`);
+      updateFrontLogCount();
+      toggleUserFields();
+    }
+
+    function updateFrontLogCount() {
+      const logs = JSON.parse(localStorage.getItem("logs") || "[]");
+      document.getElementById("front-log-count").innerText = `📊 Total Logs: ${logs.length}`;
+    }
+
+    function showAdminPanel() {
+      const input = prompt("Enter admin password:");
+      if (input === password) {
+        document.getElementById("main").style.display = "none";
+        document.getElementById("admin-panel").style.display = "block";
+        loadLogs();
+      } else {
+        alert("Incorrect password.");
+      }
+    }
+
+    function loadLogs() {
+      let logs = JSON.parse(localStorage.getItem("logs") || "[]");
+      logs.sort((a, b) => a.userType === "Faculty" ? -1 : 1);
+      const tbody = document.getElementById("log-body");
+      tbody.innerHTML = "";
+      document.getElementById("log-count").innerText = `Total Logs: ${logs.length}`;
+
+      logs.forEach((log, index) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${log.userType}</td>
+          <td>${log.date}</td>
+          <td>${capitalizeWords(log.name)}</td>
+          <td>${log.id}</td>
+          <td>${log.program}</td>
+          <td>${log.purpose}</td>
+          <td>${log.timeIn || "-"}</td>
+          <td>${log.timeOut || "-"}</td>
+          <td>${log.count}</td>
+          <td><button class="remove-btn" onclick="removeLog(${index})">Remove</button></td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    function removeLog(index) {
+      let logs = JSON.parse(localStorage.getItem("logs") || "[]");
+      logs.splice(index, 1);
+      localStorage.setItem("logs", JSON.stringify(logs));
+      loadLogs();
+    }
+
+    function clearLogs() {
+      if (confirm("Are you sure you want to delete all logs?")) {
+        localStorage.removeItem("logs");
+        loadLogs();
+        updateFrontLogCount();
+        alert("Logs cleared.");
+      }
+    }
+
+    function exportCSV() {
+      const logs = JSON.parse(localStorage.getItem("logs") || "[]");
+      let csv = "User Type,Date,Name,ID/Dept,Program/Subject,Purpose/Resources,Time In,Time Out,Visit Count\n";
+      logs.forEach(log => {
+        csv += `${log.userType},${log.date},"${capitalizeWords(log.name)}","${log.id}","${log.program}","${log.purpose}",${log.timeIn},${log.timeOut},${log.count}\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "library_logs.csv";
+      a.click();
+    }
+
+    window.onload = () => {
+      toggleUserFields();
+      updateFrontLogCount();
+    };
+  </script>
+</body>
+</html>
